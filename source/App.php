@@ -7,13 +7,15 @@
         // Fetch the database file
         $db = new PDO('sqlite:database.db');
 
-        updateDatabase($db);
-
+        /*
         $statement = $db->query("SELECT * FROM Person");
 
         $data = $statement->fetchAll(PDO::FETCH_ASSOC);
+        */
 
         $jsondata = fetchFilteredServiceJSONData();
+
+        updateDatabase($db, $jsondata);
     }
 
     function fetchFilteredServiceJSONData() {
@@ -38,13 +40,16 @@
         return $filtered_json;
     }
 
-    function updateDatabase($db) {
+    function updateDatabase($db, $jsondata) {
 
         checkForProperExistingSchema($db);
+        transferJSONToDatabase($db, $jsondata);
+
     }
 
     function checkForProperExistingSchema($db) {
 
+        // Indiviudal checks if the tables for the case
         $checkPerson = databaseTableExists($db, 'Person');
         $checkArbeidstid = databaseTableExists($db, 'Arbeidstid');
         $checkTjeneste = databaseTableExists($db, 'Tjeneste');
@@ -87,7 +92,7 @@
             $checkArbeidstid == TRUE;
         }
 
-        echo "Database schema created successfully";
+        echo "Database schema created successfully... <br>";
     }
 
     // Helper function to quickly check if table exists
@@ -105,3 +110,33 @@
             return FALSE;
         }
     }
+
+    // Function that transfers the filtered JSON data to the database
+    function transferJSONToDatabase($db, $jsondata) {
+
+        echo "Transferring JSON to database...<br>";
+
+        foreach ($jsondata as $entry) {
+            
+            // Check if the current service already exists
+            $sql = "SELECT * FROM Tjeneste WHERE tjeneste_id={$entry['id_num']}";
+            $result = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+            if($result) {
+                // Entry exists already, skipping
+                echo "Found an existing record - skipping... <br>";
+            } else {
+
+            // create new entry
+            $sql = "INSERT INTO Tjeneste (tjeneste_id, id, name, servicetype, supplier, owner) 
+                    VALUES ({$entry['id_num']}, '{$entry['id']}', '{$entry['name']}', '{$entry['servicetype']}', '{$entry['supplier']}', '{$entry['owner']}')";
+
+            if($db->query($sql)) {
+                echo "New record created successfully! <br>";
+            } else {
+                echo "Error: " . $sql . "<br>";
+            }
+        }
+        }
+    }
+?>
