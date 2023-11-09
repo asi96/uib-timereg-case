@@ -1,5 +1,6 @@
 <?php
-
+    echo file_get_contents("index.php");
+    
     main();
 
     function main() {
@@ -147,6 +148,7 @@
     // Function that takes the CSV data and creates new records for them in the Person table
     function transferCSVToDataBase($db) {
         
+        echo "Transferring CSV data to database...<br>";
         // Retrieve the file
         $csv = file('people.csv');
         $csv_data = [];
