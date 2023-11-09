@@ -44,7 +44,7 @@
 
         checkForProperExistingSchema($db);
         transferJSONToDatabase($db, $jsondata);
-
+        transferCSVToDataBase($db);
     }
 
     function checkForProperExistingSchema($db) {
@@ -57,7 +57,11 @@
         if ($checkPerson == FALSE) {
             $sql = "CREATE TABLE Person (
                 person_id	INTEGER NOT NULL,
-                navn	TEXT,
+                fornavn	TEXT,
+                etternavn	TEXT,
+                kjønn	TEXT,
+                email	TEXT,
+                alder	INTEGER,
                 PRIMARY KEY('person_id')
             )";
             $db->query($sql);
@@ -124,7 +128,7 @@
 
             if($result) {
                 // Entry exists already, skipping
-                echo "Found an existing record - skipping... <br>";
+                echo "Found an existing service record in database - skipping... <br>";
             } else {
 
             // create new entry
@@ -132,11 +136,47 @@
                     VALUES ({$entry['id_num']}, '{$entry['id']}', '{$entry['name']}', '{$entry['servicetype']}', '{$entry['supplier']}', '{$entry['owner']}')";
 
             if($db->query($sql)) {
-                echo "New record created successfully! <br>";
+                echo "New service record created successfully in database! <br>";
             } else {
                 echo "Error: " . $sql . "<br>";
             }
         }
         }
+    }
+
+    // Function that takes the CSV data and creates new records for them in the Person table
+    function transferCSVToDataBase($db) {
+        
+        // Retrieve the file
+        $csv = file('people.csv');
+        $csv_data = [];
+
+        // Put the data into an array
+        foreach($csv as $line) {
+            $csv_data[] = str_getcsv($line);
+        }
+
+        // Loop through the array and insert each person into the database
+        foreach($csv_data as $element) {
+
+            // Check if the current service already exists
+            $sql = "SELECT * FROM Person WHERE person_id={$element[0]}";
+            $result = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+            if($result) {
+                // Entry exists already, skipping
+                echo "Found an existing person record in database - skipping... <br>";
+            } else {
+
+            $sql = "INSERT INTO Person (person_id, fornavn, etternavn, kjønn, email, alder)
+                    VALUES ({$element[0]}, '{$element[1]}', '{$element[2]}', '{$element[3]}', '{$element[4]}', '{$element[5]}')";
+
+            if($db->query($sql)) {
+                echo "New person record created successfully in database! <br>";
+            } else {
+                echo "Error: " . $sql . "<br>";
+            }
+        }
+    }
     }
 ?>
