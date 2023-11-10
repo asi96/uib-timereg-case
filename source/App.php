@@ -1,23 +1,57 @@
 <?php
-    echo file_get_contents("index.php");
+
+    // Fetch the database file
+    $db = new PDO('sqlite:database.db');
     
-    main();
+    $jsondata = fetchFilteredServiceJSONData();
 
-    function main() {
+    updateDatabase($db, $jsondata);
 
-        // Fetch the database file
-        $db = new PDO('sqlite:database.db');
+    $sql = "SELECT * FROM Tjeneste";
 
-        /*
-        $statement = $db->query("SELECT * FROM Person");
+    $response = $db->query($sql);
 
-        $data = $statement->fetchAll(PDO::FETCH_ASSOC);
-        */
+    // Build the website
+    echo file_get_contents("header.php");
+?>
+<!DOCTYPE html>
+<html>
+    <div class="body-container">
+    <div class="description-top">
+        <p>Her finner du en oversikt over tjenester tilhørende IT- Digitalt læringsmiljø</p>
+    </div>
+      <div class="table-container">
+        <table class="services-data-table">
+            <tr class="top-table-row">
+                <td class="top"> ID </td>
+                <td class="top"> Navn </td>
+                <td class="top"> Service Type </td>
+                <td class="top"> Supplier </td>
+                <td class="top"> Owner </td>
+                <td class="top"> Timer </td>
+                <td class="top"> Handling </td>
+            </tr>
+            <?php
+                $result = $response->fetchAll(PDO::FETCH_ASSOC);
 
-        $jsondata = fetchFilteredServiceJSONData();
+                foreach ($result as $row) {
+                    echo "<tr>
+                    <td>{$row['id']}</td>
+                    <td>{$row['name']}</td>
+                    <td>{$row['servicetype']}</td>
+                    <td>{$row['supplier']}</td>
+                    <td>{$row['owner']}</td>
+                    <td>10</td>
+                    <td><button type='button'>Legg til timer</button></td></tr>";
+                }
+            ?>
+        </table>
+      </div>
+</html>
 
-        updateDatabase($db, $jsondata);
-    }
+<?php
+
+    echo file_get_contents("footer.php");
 
     function fetchFilteredServiceJSONData() {
 
@@ -97,7 +131,7 @@
             $checkArbeidstid == TRUE;
         }
 
-        echo "Database schema created successfully... <br>";
+        echo "<script>console.log('Database schema created successfully...')</script>";
     }
 
     // Helper function to quickly check if table exists
@@ -119,7 +153,7 @@
     // Function that transfers the filtered JSON data to the database
     function transferJSONToDatabase($db, $jsondata) {
 
-        echo "Transferring JSON to database...<br>";
+        echo "<script>console.log('Transferring JSON to database...')</script>";
 
         foreach ($jsondata as $entry) {
             
@@ -129,7 +163,7 @@
 
             if($result) {
                 // Entry exists already, skipping
-                echo "Found an existing service record in database - skipping... <br>";
+                echo "<script>console.log('Found an existing service record in database - skipping...')</script>";
             } else {
 
             // create new entry
@@ -137,7 +171,7 @@
                     VALUES ({$entry['id_num']}, '{$entry['id']}', '{$entry['name']}', '{$entry['servicetype']}', '{$entry['supplier']}', '{$entry['owner']}')";
 
             if($db->query($sql)) {
-                echo "New service record created successfully in database! <br>";
+                echo "<script>console.log('New service record created successfully in database!')</script>";
             } else {
                 echo "Error: " . $sql . "<br>";
             }
@@ -148,7 +182,7 @@
     // Function that takes the CSV data and creates new records for them in the Person table
     function transferCSVToDataBase($db) {
         
-        echo "Transferring CSV data to database...<br>";
+        echo "<script>console.log('Transferring CSV data to database...')</script>";
         // Retrieve the file
         $csv = file('people.csv');
         $csv_data = [];
@@ -167,18 +201,29 @@
 
             if($result) {
                 // Entry exists already, skipping
-                echo "Found an existing person record in database - skipping... <br>";
+                echo "<script>console.log('Found an existing person record in database - skipping...')</script>";
             } else {
 
             $sql = "INSERT INTO Person (person_id, fornavn, etternavn, kjønn, email, alder)
                     VALUES ({$element[0]}, '{$element[1]}', '{$element[2]}', '{$element[3]}', '{$element[4]}', '{$element[5]}')";
 
             if($db->query($sql)) {
-                echo "New person record created successfully in database! <br>";
+                echo "<script>console.log('New person record created successfully in database!')</script>";
             } else {
                 echo "Error: " . $sql . "<br>";
             }
         }
     }
+    }
+
+    function displayDatabaseDataAsTable($db) {
+
+        $sql = "SELECT * FROM Tjeneste";
+
+        if ( !( $response = $db->query($sql))) {
+            echo "<script>console.log('Error retrieving data from database into table')</script>";
+        } else {
+        
+        }
     }
 ?>
